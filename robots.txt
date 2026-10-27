@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://klcautomation.net/sitemap.xml
