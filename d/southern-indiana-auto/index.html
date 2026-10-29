@@ -40,15 +40,28 @@ p{margin:6px 0;font-size:16px} small{color:#94a3b8} a{color:#fbbf24}
     document.getElementById('spin').style.display='none';
     msg.innerHTML = 'The demo is waking up. <a href="" onclick="location.reload();return false;">Tap to try again</a>, or call Jacob at 502.705.7233.';
   }
+  // Two sources: the Pages copy (CDN may lag up to ~10 min after a rotation) and the
+  // GitHub API copy of the same file (fresh within ~1 min). Use whichever is newer.
+  function get(url, hdrs, ms){
+    return new Promise(function(res){
+      var done=false, t=setTimeout(function(){ if(!done){done=true;res(null);} }, ms);
+      fetch(url, {cache:'no-store', headers:hdrs||{}})
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){ if(!done){done=true;clearTimeout(t);res(j && /^https:\/\//.test(j.base) ? j : null);} })
+        .catch(function(){ if(!done){done=true;clearTimeout(t);res(null);} });
+    });
+  }
   function go(tries){
-    fetch('/d/live.json?t=' + Date.now(), {cache:'no-store'})
-      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
-      .then(function(j){
-        if(!j || !/^https:\/\//.test(j.base)) throw 0;
-        var u = j.base.replace(/\/+$/,'') + '/lot/demo' + (lot ? '?lot=' + encodeURIComponent(lot) : '');
-        location.replace(u);
-      })
-      .catch(function(){ if(tries < 2) setTimeout(function(){go(tries+1);}, 1500); else fail(); });
+    var t = Date.now();
+    Promise.all([
+      get('/d/live.json?t=' + t, null, 6000),
+      get('https://api.github.com/repos/klcautomation/klcautomation.net/contents/d/live.json?ref=main&t=' + t, {'Accept':'application/vnd.github.raw+json'}, 3000)
+    ]).then(function(a){
+      var j = a[0], k = a[1];
+      if (k && (!j || String(k.updated) > String(j.updated))) j = k;
+      if (!j) { if (tries < 2) return setTimeout(function(){go(tries+1);}, 1500); return fail(); }
+      location.replace(j.base.replace(/\/+$/,'') + '/lot/demo' + (lot ? '?lot=' + encodeURIComponent(lot) : ''));
+    });
   }
   go(0);
 })();
