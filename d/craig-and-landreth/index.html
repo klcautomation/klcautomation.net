@@ -60,8 +60,22 @@ p{margin:6px 0;font-size:16px} small{color:#94a3b8} a{color:#fbbf24}
       var j = a[0], k = a[1];
       if (k && (!j || String(k.updated) > String(j.updated))) j = k;
       if (!j) { if (tries < 2) return setTimeout(function(){go(tries+1);}, 1500); return fail(); }
-      location.replace(j.base.replace(/\/+$/,'') + '/lot/demo' + (lot ? '?lot=' + encodeURIComponent(lot) : ''));
+      var base = j.base.replace(/\/+$/,'');
+      // The free tunnel sometimes drops for a few seconds ("Tunnel offline"). Probe it with an image
+      // (no CORS needed) before leaving this page; on a miss, re-read live.json and retry for ~30s.
+      probe(base, function(ok){
+        if (ok) return location.replace(base + '/lot/demo' + (lot ? '?lot=' + encodeURIComponent(lot) : ''));
+        if (tries < 8) { msg.innerHTML = 'Waking up your demo&hellip;'; return setTimeout(function(){go(tries+1);}, 3000); }
+        fail();
+      });
     });
+  }
+  function probe(base, cb){
+    var done=false, img=new Image();
+    var t=setTimeout(function(){ if(!done){done=true;cb(false);} }, 6000);
+    img.onload=function(){ if(!done){done=true;clearTimeout(t);cb(true);} };
+    img.onerror=function(){ if(!done){done=true;clearTimeout(t);cb(false);} };
+    img.src=base + '/favicon.ico?probe=' + Date.now();
   }
   go(0);
 })();
