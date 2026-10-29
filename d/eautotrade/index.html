@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>EAutoTrade · Dealer’s Choice by KLC</title>
+<meta name="description" content="Your EAutoTrade demo: shoppers tap “I’m interested” on a car and start a quick pre-check from their phone, day or night.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="KLC Automation">
+<meta property="og:title" content="EAutoTrade · Dealer’s Choice by KLC">
+<meta property="og:description" content="Your EAutoTrade demo: shoppers tap “I’m interested” on a car and start a quick pre-check from their phone, day or night.">
+<meta property="og:url" content="https://klcautomation.net/d/eautotrade/">
+<meta property="og:image" content="https://klcautomation.net/apple-touch-icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="EAutoTrade · Dealer’s Choice by KLC">
+<meta name="twitter:description" content="Your EAutoTrade demo: shoppers tap “I’m interested” on a car and start a quick pre-check from their phone, day or night.">
+<link rel="icon" href="/favicon.ico">
+<style>
+html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#0f172a;color:#e2e8f0}
+.w{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;box-sizing:border-box}
+.s{width:28px;height:28px;border:3px solid #334155;border-top-color:#f59e0b;border-radius:50%;animation:r .8s linear infinite;margin-bottom:14px}
+@keyframes r{to{transform:rotate(360deg)}}
+p{margin:6px 0;font-size:16px} small{color:#94a3b8} a{color:#fbbf24}
+</style>
+</head>
+<body>
+<div class="w">
+<div class="s" id="spin"></div>
+<p id="msg">Loading your demo&hellip;</p>
+<small>EAutoTrade · Dealer’s Choice by KLC</small>
+<noscript><p>This demo needs JavaScript turned on. Please open this link in your phone&rsquo;s browser, or call Jacob at 502.705.7233.</p></noscript>
+</div>
+<script>
+(function(){
+  var lot = "EAutoTrade";
+  
+  var msg = document.getElementById('msg');
+  function fail(){
+    document.getElementById('spin').style.display='none';
+    msg.innerHTML = 'The demo is waking up. <a href="" onclick="location.reload();return false;">Tap to try again</a>, or call Jacob at 502.705.7233.';
+  }
+  function go(tries){
+    fetch('/d/live.json?t=' + Date.now(), {cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(j){
+        if(!j || !/^https:\/\//.test(j.base)) throw 0;
+        var u = j.base.replace(/\/+$/,'') + '/lot/demo' + (lot ? '?lot=' + encodeURIComponent(lot) : '');
+        location.replace(u);
+      })
+      .catch(function(){ if(tries < 2) setTimeout(function(){go(tries+1);}, 1500); else fail(); });
+  }
+  go(0);
+})();
+</script>
+</body>
+</html>
