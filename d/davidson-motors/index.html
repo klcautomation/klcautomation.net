@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Davidson Motors · Dealer’s Choice by KLC</title>
+<meta name="description" content="Your Davidson Motors demo: shoppers tap “I’m interested” on a car and start a quick pre-check from their phone, day or night.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="KLC Automation">
+<meta property="og:title" content="Davidson Motors · Dealer’s Choice by KLC">
+<meta property="og:description" content="Your Davidson Motors demo: shoppers tap “I’m interested” on a car and start a quick pre-check from their phone, day or night.">
+<meta property="og:url" content="https://klcautomation.net/d/davidson-motors/">
+<meta property="og:image" content="https://klcautomation.net/apple-touch-icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Davidson Motors · Dealer’s Choice by KLC">
+<meta name="twitter:description" content="Your Davidson Motors demo: shoppers tap “I’m interested” on a car and start a quick pre-check from their phone, day or night.">
+<link rel="icon" href="/favicon.ico">
+<style>
+html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#0f172a;color:#e2e8f0}
+.w{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;box-sizing:border-box}
+.s{width:28px;height:28px;border:3px solid #334155;border-top-color:#f59e0b;border-radius:50%;animation:r .8s linear infinite;margin-bottom:14px}
+@keyframes r{to{transform:rotate(360deg)}}
+p{margin:6px 0;font-size:16px} small{color:#94a3b8} a{color:#fbbf24}
+</style>
+</head>
+<body>
+<div class="w">
+<div class="s" id="spin"></div>
+<p id="msg">Loading your demo&hellip;</p>
+<small>Davidson Motors · Dealer’s Choice by KLC</small>
+<noscript><p>This demo needs JavaScript turned on. Please open this link in your phone&rsquo;s browser, or call Jacob at 502.705.7233.</p></noscript>
+</div>
+<script>
+(function(){
+  var lot = "Davidson Motors";
+  
+  var msg = document.getElementById('msg');
+  function fail(){
+    document.getElementById('spin').style.display='none';
+    msg.innerHTML = 'The demo is waking up. <a href="" onclick="location.reload();return false;">Tap to try again</a>, or call Jacob at 502.705.7233.';
+  }
+  // Two sources: the Pages copy (CDN may lag up to ~10 min after a rotation) and the
+  // GitHub API copy of the same file (fresh within ~1 min). Use whichever is newer.
+  function get(url, hdrs, ms){
+    return new Promise(function(res){
+      var done=false, t=setTimeout(function(){ if(!done){done=true;res(null);} }, ms);
+      fetch(url, {cache:'no-store', headers:hdrs||{}})
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){ if(!done){done=true;clearTimeout(t);res(j && /^https:\/\//.test(j.base) ? j : null);} })
+        .catch(function(){ if(!done){done=true;clearTimeout(t);res(null);} });
+    });
+  }
+  function go(tries){
+    var t = Date.now();
+    Promise.all([
+      get('/d/live.json?t=' + t, null, 6000),
+      get('https://api.github.com/repos/klcautomation/klcautomation.net/contents/d/live.json?ref=main&t=' + t, {'Accept':'application/vnd.github.raw+json'}, 3000)
+    ]).then(function(a){
+      var j = a[0], k = a[1];
+      if (k && (!j || String(k.updated) > String(j.updated))) j = k;
+      if (!j) { if (tries < 2) return setTimeout(function(){go(tries+1);}, 1500); return fail(); }
+      var base = j.base.replace(/\/+$/,'');
+      // The free tunnel sometimes drops for a few seconds ("Tunnel offline"). Probe it with an image
+      // (no CORS needed) before leaving this page; on a miss, re-read live.json and retry for ~30s.
+      probe(base, function(ok){
+        if (ok) return location.replace(base + '/lot/demo' + (lot ? '?lot=' + encodeURIComponent(lot) : ''));
+        if (tries < 8) { msg.innerHTML = 'Waking up your demo&hellip;'; return setTimeout(function(){go(tries+1);}, 3000); }
+        fail();
+      });
+    });
+  }
+  function probe(base, cb){
+    var done=false, img=new Image();
+    var t=setTimeout(function(){ if(!done){done=true;cb(false);} }, 6000);
+    img.onload=function(){ if(!done){done=true;clearTimeout(t);cb(true);} };
+    img.onerror=function(){ if(!done){done=true;clearTimeout(t);cb(false);} };
+    img.src=base + '/favicon.ico?probe=' + Date.now();
+  }
+  go(0);
+})();
+</script>
+</body>
+</html>
